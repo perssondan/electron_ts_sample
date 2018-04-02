@@ -1,8 +1,22 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu } from "electron";
 import * as path from "path";
 import * as url from "url";
 
 let mainWindow: Electron.BrowserWindow;
+const mainMenuTemplate = [
+  {
+    label: "File",
+    submenu: [
+      {
+        accelerator: process.platform === "darwin" ? "Command+Q" : "Ctrl+Q",
+                click() {
+                    app.quit();
+                },
+        label: "Quit",
+      },
+    ],
+  },
+];
 
 function createWindow() {
   // Create the browser window.
@@ -18,8 +32,27 @@ function createWindow() {
       slashes: true,
   }));
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // Add the DevTools if not in production
+  if (process.env.NODE_ENV !== "production") {
+      mainMenuTemplate.push({
+        label: "Developer Tools",
+        submenu: [
+          {
+            accelerator: "Ctrl+I",
+            click() {
+              mainWindow.webContents.toggleDevTools();
+            },
+            label: "Toggle DevTools",
+          },
+        ],
+      },
+    );
+  }
+
+  // Build menu from template
+  const mainMenu = Menu.buildFromTemplate(mainMenuTemplate);
+  // Insert menu
+  Menu.setApplicationMenu(mainMenu);
 
   // Emitted when the window is closed.
   mainWindow.on("closed", () => {
